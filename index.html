@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Data Management</title>
+  </head>
+  <body>
+    <h2>User Data</h2>
+    
+    <table border="1">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Name</th>
+          <th>Email</th>
+          <th>Date of Birth</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- Ini buat tabel -->
+      </tbody>
+    </table>
+    
+    <h2>Add User</h2>
+    <form id="addUserForm" method="post" action="/addUser">
+      <label for="name">Name:</label>
+      <input type="text" id="name" name="name" required><br>
+      
+      <label for="email">Email:</label>
+      <input type="email" id="email" name="email" required><br>
+      
+      <label for="dob">Date of Birth:</label>
+      <input type="date" id="dob" name="dob" required><br>
+      
+      <button type="submit">Add User</button>
+    </form>
+
+    <!-- Edit User form -->
+    <div id="editUserFormContainer" style="display: none;">
+      <h2>Edit User</h2>
+      <form id="editUserForm" method="patch" action="/editUser">
+        <input type="hidden" id="editUserId" name="id" value="">
+        <label for="editName">Name:</label>
+        <input type="text" id="editName" name="name" required><br>
+        
+        <label for="editEmail">Email:</label>
+        <input type="email" id="editEmail" name="email" required><br>
+        
+        <label for="editDob">Date of Birth:</label>
+        <input type="date" id="editDob" name="dob" required><br>
+        
+        <button type="submit">Save Changes</button>
+      </form>
+    </div>
+
+    <script>
+      // Function deleteUser tetapi pada client side
+      // Digunakan untuk membuka http request dan parse JSON
+      function deleteUser(userId) {
+        const xhr = new XMLHttpRequest();
+        xhr.open('DELETE', `/deleteUser?id=${userId}`, true);
+
+        xhr.onreadystatechange = function() {
+          if (xhr.readyState === 4 && xhr.status === 200) {
+            updateTable(JSON.parse(xhr.responseText));
+          }
+        };
+
+        xhr.send();
+      }
+      // Function untuk update table setelah delete
+      function updateTable(data) {
+        const tableBody = document.querySelector('tbody');
+        tableBody.innerHTML = '';
+
+        data.forEach(user => {
+          const row = document.createElement('tr');
+          row.innerHTML = `
+            <td>${user.id}</td>
+            <td>${user.name}</td>
+            <td>${user.email}</td>
+            <td>${user.dob}</td>
+            <td>
+              <button onclick="deleteUser(${user.id})">Delete</button>
+              <button onclick="editUserForm(${user.id}, '${user.name}', '${user.email}', '${user.dob}')">Edit</button>
+            </td>
+          `;
+
+          tableBody.appendChild(row);
+        });
+      }
+
+      // Function untuk memanggil editForm
+      function editUserForm(userId, name, email, dob) {
+        document.getElementById('editUserId').value = userId;
+        document.getElementById('editName').value = name;
+        document.getElementById('editEmail').value = email;
+        document.getElementById('editDob').value = dob;
+
+        document.getElementById('editUserFormContainer').style.display = 'block';
+      }
+
+      // Function untuk hide userForm
+      function hideEditUserForm() {
+        document.getElementById('editUserFormContainer').style.display = 'none';
+      }
+
+      // Tabel init pada saat pertama kali load
+      window.onload = function() {
+        const xhr = new XMLHttpRequest();
+        xhr.open('GET', '/', true);
+
+        xhr.onreadystatechange = function() {
+          if (xhr.readyState === 4 && xhr.status === 200) {
+            updateTable(JSON.parse(xhr.responseText));
+          }
+        };
+
+        xhr.send();
+      };
+    </script>
+  </body>
+</html>
